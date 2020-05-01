@@ -44,18 +44,9 @@
    
   }
   
-
-
-
-
-
-
-
-
-
-/* overwritten */ 
-
-
+  .bg-blue {
+    background-color: rgb(61, 165, 250);
+  }
 
 
 html {
@@ -63,14 +54,6 @@ html {
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
 }
-
-
-
-
-
-
-
-
 
 
 body {

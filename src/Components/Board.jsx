@@ -11,20 +11,22 @@ const Board = ({ handleChange, handleFocus, cellValues, cellBackgroundColors }) 
         <div className="container">
             <hr />
             <div className="card">
-                <table>
+                <table style={{display: 'flex', justifyContent: 'center'}}>
                     <tbody>
-                        {simple9.map( elem => {
-                            return (
-                                <BoardRow
-                                    key={elem}
-                                    handleChange={handleChange}
-                                    handleFocus={handleFocus}
-                                    cellValues={cellValues}
-                                    cellBackgroundColors={cellBackgroundColors}
-                                    id={elem.toString()}
-                                />
-                            )
-                        })}
+                        {
+                            simple9.map( elem => {
+                                return (
+                                    <BoardRow
+                                        key={elem}
+                                        handleChange={handleChange}
+                                        handleFocus={handleFocus}
+                                        cellValues={cellValues}
+                                        cellBackgroundColors={cellBackgroundColors}
+                                        id={elem.toString()}
+                                    />
+                                )
+                            })
+                        }
                     </tbody>
                 </table>
             </div>

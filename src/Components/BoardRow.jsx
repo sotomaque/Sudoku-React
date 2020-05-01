@@ -14,12 +14,9 @@ const BoardRow = ({ handleChange, handleFocus, cellValues, cellBackgroundColors,
     }
 
     const getBgcolor = (id, elem) => {
-        return "bg-white squareinp";
-
         let num = (parseInt(id) - 1) * 9 + parseInt(elem) - 1;
-        // cellsBackgroundColors = [ 'bg-white', 'bg-white', 'bg-white', ... ];
-        // let cname = cellsBackgroundColors[num] + " squareinp";
-        // return cname;
+        let cname = cellBackgroundColors[num] + " squareinp";
+        return cname;
     }
 
     const columnArr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -47,8 +44,8 @@ const BoardRow = ({ handleChange, handleFocus, cellValues, cellBackgroundColors,
                                 type="text"
                                 name="name"
                                 className={bgClassName}
-                                onChange={handleChange}
-                                onFocus={handleFocus}
+                                onChange={(e) => handleChange(e)}
+                                onFocus={(e) => handleFocus(e)}
                                 value={value}
                             />
                         </td>
