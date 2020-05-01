@@ -1,3 +1,5 @@
+import _ from "underscore";
+
  /**
    * @param {string} id - id of the selected cell;
    *                      i.e. cell at row 0, column 0 has an id = 00
@@ -40,7 +42,7 @@ export function getAllCellsInfo(cellValues) {
 }
 
 function convertIndexToId(index, value) {
-    let num = parseInt(index ) + 1;
+    let num = parseInt(index) + 1;
     let division = Math.floor(num / 9) + 1;
     let remainder = num % 9;
     if (remainder === 0) {
@@ -52,4 +54,47 @@ function convertIndexToId(index, value) {
     let cube = getCubeIndex(division, remainder);
     let obj = { row: division, column: remainder, cube: cube, value: value };
     return obj;
+}
+
+export function candidateValuesById(cellValues, id) {
+    let row = parseInt(id[0]);
+    let column = parseInt(id[1]);
+    let cube = getCubeIndex(row, column);
+    
+    return candidateValuesByRowColumnCube(cellValues, row, column, cube);
+}
+
+function candidateValuesByRowColumnCube(cellValues, row, column, cube) {
+    let allCells = getAllCellsInfo(cellValues);
+    // figure out what values are already entered in our
+    // row, column or cube
+    let known = getKnownValues(allCells, row, column, cube);
+    // return the difference
+    let candidates = _.difference([1,2,3,4,5,6,7,8,9], known.knownValues);
+
+    return candidates;
+}
+
+
+function getKnownValues(allCells, row, column, cube) {
+    let knownValues = []
+    let knownValuesObj = [];
+
+    allCells.map( cell => {
+        if (parseInt(cell.value) > 0) {
+            if (cell.row === row || cell.column === column || cell.cube === cube) {
+                let obj = {
+                    row: cell.row,
+                    column: cell.column,
+                    cube: cell.cube,
+                    valule: cell.value
+                };
+
+                knownValues.push(cell.value);
+                knownValuesObj.push(obj);
+            }
+        }
+    });
+
+    return { knownValues, knownValuesObj };
 }

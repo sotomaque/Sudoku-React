@@ -9,22 +9,31 @@ import GameInfo from "./Components/GameInfo";
 import ConsoleRight from './Components/ConsoleRight';
 
 import getFirstValue from './Controls/NewGame';
-import { convertIdToIndex, getCubeIndex, getAllCellsInfo } from './Controls/NewEngine';
+import { convertIdToIndex, getCubeIndex, getAllCellsInfo, candidateValuesById } from './Controls/NewEngine';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Settings from "./Components/Settings";
 
 function App() {
+
+    // tools state
+    const [hintDisabled, setHintDisabled] = React.useState(true);
+    const [hintsUsed, setHintsUsed] = React.useState(0);
 
     // board state
     const [cellBackgroundColors, setCellBackgroundColors] = React.useState(new Array(81).fill('bg-white'));
     const [cellValues, setCellValues] = React.useState(new Array(81).fill('5'));
   
+    const [highlightCells, setHighlightCells] = React.useState(true);
+
     // game info state
     const [gameLevel, setGameLevel] = React.useState('easy');
     const [complexityLevel, setComplexityLevel] = React.useState(null);
     const [countEmptyCells, setCountEmptyCells] = React.useState(null);
     const [complexityLog, setComplexityLog] = React.useState(1);
+
+    const [possibleValue, setPossibleValue] = React.useState('');
   
     // console right state
     const [consoleMessage, setConsoleMessage] = React.useState('First Message');
@@ -58,7 +67,19 @@ function App() {
     console.log("deleteGame")
   };
   const hint = () => {
-    console.log("hint")
+    setHintsUsed(prev => prev + 1);
+    console.log('number of hints used: ', hintsUsed)
+    toast.info(
+      `👀 Hmmm... Maybe a ${possibleValue}?`, 
+      {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true
+      }
+    )
   };
   const undo = () => {
     notify();
@@ -88,8 +109,10 @@ function App() {
     const value = e.target.value;
 
     // color selected cell blue, constraining cells coral
-    colorConnectedCells(id, "coral");
-    // showCellInfo(id, value);
+    if (highlightCells) {
+      colorConnectedCells(id, "coral");
+    }
+    showCellInfo(id, value);
   }
   const colorConnectedCells = (id, color) => {
     // let index = convertIdToIndex(id);
@@ -128,6 +151,20 @@ function App() {
     // update state with new color array
     setCellBackgroundColors(colorCells);
   }
+  const showCellInfo = (id, value) => {
+    // if selected cell is fulled
+    if (parseInt(value) > 0) {
+      setHintDisabled(true);
+      // set message to display on ConsoleRight
+      sendConsole(`This one is filled: (Row, Column): (${id[0]}, ${id[1]}))`);
+      return;
+    }
+    setHintDisabled(false);
+    let candidates = candidateValuesById(cellValues, id);
+    console.log('candidates: ', candidates)
+    setPossibleValue(candidates[Math.floor(Math.random() * candidates.length)])
+ 
+  }
 
   // console right props
   const handleShowFound = () => {
@@ -141,6 +178,12 @@ function App() {
   React.useEffect(() => {
     notify()
   }, []);
+
+  React.useEffect(() => {
+    if (!highlightCells) {
+      setCellBackgroundColors(new Array(81).fill('bg-white'));
+    }
+  }, [highlightCells])
 
   const notify = () => {
     toast(
@@ -174,6 +217,7 @@ function App() {
               deleteGame={deleteGame} 
               hint={hint}
               undo={undo} 
+              hintDisabled={hintDisabled}
             />
           </div>
           {/** MAIN CONTENT **/}
@@ -187,6 +231,12 @@ function App() {
                   cellValues={cellValues}
                   cellBackgroundColors={cellBackgroundColors}
                 />
+      
+                <Settings
+                  highlightCells={highlightCells}
+                  setHighlightCells={setHighlightCells}
+                />
+
               </div>
               {/** END OF BOARD **/}
 
@@ -211,6 +261,7 @@ function App() {
                         consoleMessage={consoleMessage}
                         numberSolved={numberSolved}
                         showFound={handleShowFound}
+                        hintsUsed={hintsUsed}
                       />
 
                     </div>
