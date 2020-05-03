@@ -1,52 +1,35 @@
 import React from "react";
 
-const GameInfo = ({
-  gameLevel,
-  complexityLevel,
-  countEmptyCells,
-  complexityLog,
-}) => {
-  const cName = (gameLevel === "hard") ? "danger"
-      : (gameLevel === "easy") ? "success"
+const GameInfo = ({ gameDifficulty, complexity, numberOfEmptyCells, complexityLog }) => {
+  const cName = (gameDifficulty === "hard") ? "danger"
+      : (gameDifficulty === "easy") ? "success"
         : "warning";
 
   return (
     <>
         <br />
         <article className="panel is-white">
-          <p className="panel-heading">Game Info</p>
-          <p className="panel-tabs">
-            <a className="is-active"> </a>
-            <a> </a>
-          </p>
-          {/*
-          <div className="panel-block">
-            <p className="control has-icons-left">
-              <input className="input is-primary" type="text" placeholder="Search"/> 
-              <span className="icon is-left">
-                <i className="fas fa-search" aria-hidden="true"></i>
-              </span>
-            </p>
+
+
+          <p className="panel-heading" style={{ display: 'flex', justifyContent: 'center'}}>Game Info</p>
+      
+          <div className="difficulty" style={{ display: 'flex', justifyContent: 'center'}}>
+            <button className={`button is-${cName}`} >
+                {gameDifficulty}
+            </button>
           </div>
-          */}
-          <a className="panel-block is-active">
-            <span className="panel-icon">
-              <i className="fas fa-book" aria-hidden="true"></i>
-            </span>
-            <span className={"tag is-large is-" + cName}> {gameLevel} </span>
-          </a>
 
           <a className="panel-block">
             <span className="panel-icon">
               <i className="fas fa-book" aria-hidden="true"></i>
             </span>
-            Empty Cells : {countEmptyCells}
+            Empty Cells : {numberOfEmptyCells}
           </a>
           <a className="panel-block">
             <span className="panel-icon">
               <i className="fas fa-book" aria-hidden="true"></i>
             </span>
-            Complexity : {complexityLevel}
+            Complexity : {complexity}
           </a>
           <a className="panel-block">
             <span className="panel-icon">

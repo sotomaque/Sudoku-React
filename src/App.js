@@ -9,7 +9,8 @@ import GameInfo from "./Components/GameInfo";
 import ConsoleRight from './Components/ConsoleRight';
 
 import getFirstValue from './Controls/NewGame';
-import { convertIdToIndex, getCubeIndex, getAllCellsInfo, candidateValuesById } from './Controls/NewEngine';
+import { convertIdToIndex, getCubeIndex, getAllCellsInfo, candidateValuesById,
+   solveAlgo1, solveAlgo2, getGameInfo } from './Controls/NewEngine';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -17,33 +18,44 @@ import Settings from "./Components/Settings";
 
 function App() {
 
-    // tools state
-    const [hintDisabled, setHintDisabled] = React.useState(true);
-    const [hintsUsed, setHintsUsed] = React.useState(0);
+  // tools state
+  const [hintDisabled, setHintDisabled] = React.useState(true);
+  const [solveEnabled, setSolvedEnabled] = React.useState(false);
+  const [hintsUsed, setHintsUsed] = React.useState(0);
 
-    // board state
-    const [cellBackgroundColors, setCellBackgroundColors] = React.useState(new Array(81).fill('bg-white'));
-    const [cellValues, setCellValues] = React.useState(new Array(81).fill('5'));
-  
-    const [highlightCells, setHighlightCells] = React.useState(true);
+  // board state
+  const [cellBackgroundColors, setCellBackgroundColors] = React.useState(new Array(81).fill('bg-white'));
+  const [cellValues, setCellValues] = React.useState(new Array(81).fill('5'));
 
-    // game info state
-    const [gameLevel, setGameLevel] = React.useState('easy');
-    const [complexityLevel, setComplexityLevel] = React.useState(null);
-    const [countEmptyCells, setCountEmptyCells] = React.useState(null);
-    const [complexityLog, setComplexityLog] = React.useState(1);
+  const [highlightCells, setHighlightCells] = React.useState(true);
 
-    const [possibleValue, setPossibleValue] = React.useState('');
-  
-    // console right state
-    const [consoleMessage, setConsoleMessage] = React.useState('First Message');
-    const [numberSolved, setNumberSolved] = React.useState(0)
+  // game info state
+  const [gameDifficulty, setGameDifficulty] = React.useState('easy');
+  const [complexity, setComplexity] = React.useState(null);
+  const [complexityLog, setComplexityLog] = React.useState(null);
+  const [numberOfEmptyCells, setNumberOfEmptyCells] = React.useState();
+
+  const [possibleValue, setPossibleValue] = React.useState('');
+
+  // console right state
+  const [consoleMessage, setConsoleMessage] = React.useState('First Message');
+  const [numberSolved, setNumberSolved] = React.useState(0)
   
 
   // tool props
   const solve = () => {
-    console.log("solve");
-    setCellValues(new Array(81).fill('1'));
+    let results = solveAlgo2(cellValues);
+    results.map(result => {
+      let value = result.value;
+      let row = result.detail.row.toString();
+      let column = result.detail.column.toString();
+      let id = `${row}${column}`;
+      console.log(`filling in row ${row} column ${column} with value ${value}`)
+      setTimeout(() => {
+        changeCellValueById(id, value);
+      }, 300)
+      
+    })
   };
   const stop = () => {
     console.log("stop")
@@ -51,6 +63,7 @@ function App() {
   const newGame = () => {
     // get valid starting game matrix from Controls
     let gameObj = getFirstValue();
+    setGameDifficulty(gameObj.difficulty)
     // cast into array
     let newArr = gameObj.str.split(';');
     newArr.pop();
@@ -81,8 +94,31 @@ function App() {
       }
     )
   };
-  const undo = () => {
-    notify();
+  const solveSingleSquare = () => {
+    // try easy algo
+    let results = solveAlgo1(cellValues);
+    let cell = results[0].cell;
+    let candidates = results[0].candidates;
+
+    let row = cell.row;
+    let column = cell.column;
+    let id = `${row}${column}`;
+
+    if (candidates.length == 1) {
+      changeCellValueById(id, candidates);
+    } else {
+      toast.warn(
+        `⚠ DANGER ZONE: LENGTH OF CANDIDATES IS ${candidates.length}`,  
+        {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      )
+    }
   }
 
   // board props
@@ -92,9 +128,25 @@ function App() {
     // handle valid input and backspace
     if ((value > 0 && value < 10) || (value === "")){
       changeCellValueById(id, value);
-    } 
+    } else {
+      toast.error(
+        `⚠ You inserted ${value}. Please enter a number between 1-9.`,  
+        {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      )
+    }
   }
   const changeCellValueById = (id, value) => {
+
+    // highlight cell about to be changed
+    colorCellById(id, "coral");
+
     // spread in previous state into new array
     let newCellValues = [...cellValues];
     // get index of element we are updating value for
@@ -107,7 +159,6 @@ function App() {
   const handleFocus = (e) => {
     const id = e.target.id;
     const value = e.target.value;
-
     // color selected cell blue, constraining cells coral
     if (highlightCells) {
       colorConnectedCells(id, "coral");
@@ -163,7 +214,23 @@ function App() {
     let candidates = candidateValuesById(cellValues, id);
     console.log('candidates: ', candidates)
     setPossibleValue(candidates[Math.floor(Math.random() * candidates.length)])
- 
+
+  }
+  const colorCellById = (id, color) => {
+    // temporarily change color of single cell
+    let colorCells = [...cellBackgroundColors];
+    let index = convertIdToIndex(id);
+    colorCells[index] = "bg-" + color;
+    setCellBackgroundColors(colorCells);
+    setTimeout(() => {
+      colorCellByIndexWhite(index);
+    }, 1500)
+    
+  }
+  const colorCellByIndexWhite = (index) => {
+    let colorCells = [...cellBackgroundColors];
+    colorCells[index] = 'bg-white';
+    setCellBackgroundColors(colorCells);
   }
 
   // console right props
@@ -184,6 +251,23 @@ function App() {
       setCellBackgroundColors(new Array(81).fill('bg-white'));
     }
   }, [highlightCells])
+
+  React.useEffect(() => {
+
+    // get game info
+    let { cells, filledCells, emptyCells, complexity } = getGameInfo(cellValues);
+
+    // use game info to update state
+    setNumberOfEmptyCells(emptyCells);
+    setComplexity(complexity);
+    if (emptyCells !== 0) {
+      setSolvedEnabled(true)
+    } else {
+      setSolvedEnabled(false)
+    }
+
+    
+  }, [cellValues])
 
   const notify = () => {
     toast(
@@ -212,11 +296,12 @@ function App() {
           <div className="container">
             <Tools 
               solve={solve} 
+              solveEnabled={solveEnabled}
               stop={stop} 
               newGame={newGame} 
               deleteGame={deleteGame} 
               hint={hint}
-              undo={undo} 
+              solveSingleSquare={solveSingleSquare} 
               hintDisabled={hintDisabled}
             />
           </div>
@@ -243,9 +328,9 @@ function App() {
               {/** GAME INFO **/}
               <div className="column">
                 <GameInfo
-                  gameLevel={gameLevel}
-                  complexityLevel={complexityLevel}
-                  countEmptyCells={countEmptyCells}
+                  gameDifficulty={gameDifficulty}
+                  complexity={complexity}
+                  numberOfEmptyCells={numberOfEmptyCells}
                   complexityLog={complexityLog}
                 />
               </div>
@@ -278,7 +363,7 @@ function App() {
         {/** FOOTER **/}
         <footer className="footer">
           <div className="content has-text-centered">
-            <p><b>Sudoku</b> - Enrique Sotomayor 2020</p>
+            <p>Sudoku - <b>Enrique Sotomayor</b> - 2020</p>
           </div>
         </footer>
         {/** END OF FOOTER **/}
