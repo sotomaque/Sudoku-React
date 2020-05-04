@@ -1,6 +1,6 @@
 import React from "react";
 
-const GameInfo = ({ gameDifficulty, complexity, numberOfEmptyCells, complexityLog }) => {
+const GameInfo = ({ gameId, gameDifficulty, complexity, numberOfEmptyCells, complexityLog }) => {
   const cName = (gameDifficulty === "hard") ? "danger"
       : (gameDifficulty === "easy") ? "success"
         : "warning";
@@ -12,10 +12,11 @@ const GameInfo = ({ gameDifficulty, complexity, numberOfEmptyCells, complexityLo
 
 
           <p className="panel-heading" style={{ display: 'flex', justifyContent: 'center'}}>Game Info</p>
-      
+          <p className="panel-subheading" style={{ display: 'flex', justifyContent: 'center'}}>Game ID: {gameId}</p>
+          <br />
           <div className="difficulty" style={{ display: 'flex', justifyContent: 'center'}}>
             <button className={`button is-${cName}`} >
-                {gameDifficulty}
+                {gameDifficulty} 
             </button>
           </div>
 

@@ -1,5 +1,9 @@
 import React from "react";
 import 'bulma/css/bulma.css'
+import _ from "underscore";
+
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 import Banner from './Components/Banner';
 import Tools from './Components/Tools';
@@ -8,9 +12,9 @@ import Board from './Components/Board';
 import GameInfo from "./Components/GameInfo";
 import ConsoleRight from './Components/ConsoleRight';
 
-import getFirstValue from './Controls/NewGame';
-import { convertIdToIndex, getCubeIndex, getAllCellsInfo, candidateValuesById,
-   solveAlgo1, solveAlgo2, getGameInfo } from './Controls/NewEngine';
+import { getFirstValue, loadGameByDifficulty } from './Controls/NewGame';
+import { convertIdToIndex, getCubeIndex, getAllCellsInfo, candidateValuesById, getGameInfo, getAllCellsInfoCellsAsCSV,
+   solveAlgo1, solveAlgo2, solveAlgo3, validInput, getIdsOfConflictingCells } from './Controls/NewEngine';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -19,55 +23,97 @@ import Settings from "./Components/Settings";
 function App() {
 
   // tools state
-  const [hintDisabled, setHintDisabled] = React.useState(true);
   const [solveEnabled, setSolvedEnabled] = React.useState(false);
   const [hintsUsed, setHintsUsed] = React.useState(0);
 
   // board state
   const [cellBackgroundColors, setCellBackgroundColors] = React.useState(new Array(81).fill('bg-white'));
+  const [defaultColors] = React.useState(new Array(81).fill('bg-white'));
   const [cellValues, setCellValues] = React.useState(new Array(81).fill('5'));
-
   const [highlightCells, setHighlightCells] = React.useState(true);
 
   // game info state
   const [gameDifficulty, setGameDifficulty] = React.useState('easy');
+  const [gameId, setGameId] = React.useState(0);
   const [complexity, setComplexity] = React.useState(null);
   const [complexityLog, setComplexityLog] = React.useState(null);
   const [numberOfEmptyCells, setNumberOfEmptyCells] = React.useState();
+  const [gameActive, setGameActive] = React.useState(false);
 
   const [possibleValue, setPossibleValue] = React.useState('');
 
   // console right state
   const [consoleMessage, setConsoleMessage] = React.useState('First Message');
-  const [numberSolved, setNumberSolved] = React.useState(0)
+  const [gamesWon, setGamesWon] = React.useState(0)
   
-
   // tool props
-  const solve = () => {
-    let results = solveAlgo2(cellValues);
-    results.map(result => {
-      let value = result.value;
-      let row = result.detail.row.toString();
-      let column = result.detail.column.toString();
+  const handleSolveClicked = () => {
+    let algo1Results = solveAlgo1(cellValues);
+
+    let cell = algo1Results[0].cell;
+    let candidates = algo1Results[0].candidates;
+
+    // algo 1
+    if (candidates.length === 1) {
+      let row = cell.row;
+      let column = cell.column;
       let id = `${row}${column}`;
-      console.log(`filling in row ${row} column ${column} with value ${value}`)
-      setTimeout(() => {
+      notify(`changing id: ${id} to have value: ${candidates} using algo 1`);
+      setHintsUsed(prev => prev + 1);
+      blinkCells([id], "coral");
+      changeCellValueById(id, candidates);
+    } 
+
+    // try algo 2
+    else if (candidates.length > 1) {
+
+      let algo2Results = solveAlgo2(cellValues);
+      if (algo2Results.length >= 1) {
+        let value = algo2Results[0].value;
+        let detail = algo2Results[0].detail;
+        let constrainedBy = algo2Results[0].constrainedBy;
+
+        let row = detail.row;
+        let column = detail.column;
+        let id = `${row}${column}`;
+        notify(`changing id: ${id} to have value: ${value} using algo 2 bc of: ${constrainedBy}`);
+        setHintsUsed(prev => prev + 1);
+        blinkCells([id], "coral");
         changeCellValueById(id, value);
-      }, 300)
-      
-    })
-  };
-  const stop = () => {
-    console.log("stop")
-  };
+      } else {
+        console.log('feeling lucky')
+        feelingLucky();
+      }
+
+    }
+  }
+  const feelingLucky = () => {
+    let try1 = solveAlgo3(cellValues);
+    
+    if (try1===null) {
+      console.log('try 1 is empty, failed');
+    } else {
+      console.log('try1: ', try1);
+
+      if (tryNow(try1) === false) {
+        console.log('try now is false, must go back')
+      }
+    } 
+  }
+  const tryNow = (try1) => {
+    let handed = _.sample(try1);
+    console.log('handed: ', handed)
+  }
   const newGame = () => {
     // get valid starting game matrix from Controls
     let gameObj = getFirstValue();
     setGameDifficulty(gameObj.difficulty)
+    setGameId(gameObj.id)
     // cast into array
     let newArr = gameObj.str.split(';');
     newArr.pop();
     // use it to update our cell values state
+    console.log('passing into cell values: ', newArr)
     setCellValues(newArr);
     // reset colors
     resetColors();
@@ -76,50 +122,9 @@ function App() {
     const colors = new Array(81).fill('bg-white');
     setCellBackgroundColors(colors);
   }
-  const deleteGame = () => {
+  const startOver = () => {
     console.log("deleteGame")
   };
-  const hint = () => {
-    setHintsUsed(prev => prev + 1);
-    console.log('number of hints used: ', hintsUsed)
-    toast.info(
-      `👀 Hmmm... Maybe a ${possibleValue}?`, 
-      {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      }
-    )
-  };
-  const solveSingleSquare = () => {
-    // try easy algo
-    let results = solveAlgo1(cellValues);
-    let cell = results[0].cell;
-    let candidates = results[0].candidates;
-
-    let row = cell.row;
-    let column = cell.column;
-    let id = `${row}${column}`;
-
-    if (candidates.length == 1) {
-      changeCellValueById(id, candidates);
-    } else {
-      toast.warn(
-        `⚠ DANGER ZONE: LENGTH OF CANDIDATES IS ${candidates.length}`,  
-        {
-          position: 'top-right',
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true
-        }
-      )
-    }
-  }
 
   // board props
   const handleChange = (e) => {
@@ -127,7 +132,15 @@ function App() {
     const value = e.target.value;
     // handle valid input and backspace
     if ((value > 0 && value < 10) || (value === "")){
-      changeCellValueById(id, value);
+      // check if user input is valid entry for that position
+      if (validInput(cellValues, id, value)) {
+        changeCellValueById(id, value);
+      } 
+      // if not highlight the cells it conflicts with
+      else {
+        let idsInConflict = getIdsOfConflictingCells(cellValues, id, value);  
+        blinkCells(idsInConflict, "red");
+      }
     } else {
       toast.error(
         `⚠ You inserted ${value}. Please enter a number between 1-9.`,  
@@ -141,12 +154,25 @@ function App() {
         }
       )
     }
+  
+  }
+  const colorThese = (arrayOfIds, color) => {
+    if (arrayOfIds.length > 0) {
+      let colorCells = [...cellBackgroundColors];
+      arrayOfIds.map(id => {
+        let index = convertIdToIndex(id);
+        colorCells[index] = 'bg-' + color;
+      });
+      setCellBackgroundColors(colorCells);
+    }
+  }
+  const blinkCells = (arrayOfIds, color) => {
+    colorThese(arrayOfIds, color);
+    setTimeout(() => {
+      setCellBackgroundColors(defaultColors);
+    }, 1000);
   }
   const changeCellValueById = (id, value) => {
-
-    // highlight cell about to be changed
-    colorCellById(id, "coral");
-
     // spread in previous state into new array
     let newCellValues = [...cellValues];
     // get index of element we are updating value for
@@ -159,6 +185,9 @@ function App() {
   const handleFocus = (e) => {
     const id = e.target.id;
     const value = e.target.value;
+
+    setIdSelected(id);
+
     // color selected cell blue, constraining cells coral
     if (highlightCells) {
       colorConnectedCells(id, "coral");
@@ -203,34 +232,90 @@ function App() {
     setCellBackgroundColors(colorCells);
   }
   const showCellInfo = (id, value) => {
-    // if selected cell is fulled
+    // if selected cell is filled
     if (parseInt(value) > 0) {
-      setHintDisabled(true);
       // set message to display on ConsoleRight
       sendConsole(`This one is filled: (Row, Column): (${id[0]}, ${id[1]}))`);
       return;
     }
-    setHintDisabled(false);
     let candidates = candidateValuesById(cellValues, id);
     console.log('candidates: ', candidates)
     setPossibleValue(candidates[Math.floor(Math.random() * candidates.length)])
-
   }
   const colorCellById = (id, color) => {
-    // temporarily change color of single cell
     let colorCells = [...cellBackgroundColors];
     let index = convertIdToIndex(id);
     colorCells[index] = "bg-" + color;
     setCellBackgroundColors(colorCells);
-    setTimeout(() => {
-      colorCellByIndexWhite(index);
-    }, 1500)
-    
   }
-  const colorCellByIndexWhite = (index) => {
-    let colorCells = [...cellBackgroundColors];
-    colorCells[index] = 'bg-white';
-    setCellBackgroundColors(colorCells);
+  const [idSelected, setIdSelected] = React.useState(null);
+  const markThisCell = () => {
+    if (idSelected !== null) {
+      // change color of that cell
+      const id = idSelected;
+      let colorCells = [...cellBackgroundColors];
+      let index = convertIdToIndex(id);
+      if (colorCells[index] === 'bg-white') {
+        colorCells[index] = "bg-red";
+      } else {
+        colorCells[index] = "bg-white";
+      }
+      
+      setCellBackgroundColors(colorCells);
+    } else {
+      console.log('id selected is null')
+    }
+  }
+  const showAlert = () => {
+    confirmAlert({
+      customUI: ({ onClose }) => {
+        return (
+          <div>
+            <h1 style={{display: 'flex', justifyContent: 'center'}}><b>Choose Game By Difficulty</b></h1>
+            <div className='difficulty-options'>
+              <button className="button is-info" onClick={() => {
+                getGameByDifficulty('easy')
+                onClose()
+              }} style={{margin: '5px'}}>
+                Easy
+              </button>
+              <button className="button is-warning" onClick={() => {
+                getGameByDifficulty('medium')
+                onClose()
+              }} style={{margin: '5px'}}>
+                Medium
+              </button>
+              <button
+                className="button is-success" onClick={() => {
+                  getGameByDifficulty('hard')
+                  onClose()
+                }} style={{margin: '5px'}}>
+                Hard
+              </button>
+            </div>
+            <div className='cancel-button' style={{display: 'grid'}}> 
+              <button className="button is-danger" onClick={onClose} style={{margin: '5px'}}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+      },
+    });
+  }
+  const getGameByDifficulty = (difficulty) => {
+    console.log('getting a ', difficulty, ' game')
+    // get valid starting game matrix from Controls
+    let gameObj = loadGameByDifficulty(difficulty);
+    setGameDifficulty(gameObj.difficulty);
+    setGameId(gameObj.id)
+    // cast into array
+    let newArr = gameObj.str.split(';');
+    newArr.pop();
+    // use it to update our cell values state
+    setCellValues(newArr);
+    // reset colors
+    resetColors();
   }
 
   // console right props
@@ -240,10 +325,13 @@ function App() {
   const sendConsole = () => {
     console.log("sendConsole")
   }
-
+  const [initialEmpty, setInitialEmpty] = React.useState();
 
   React.useEffect(() => {
-    notify()
+    // load random game
+    newGame();
+    let { emptyCells } = getGameInfo(cellValues);
+    setInitialEmpty(emptyCells);
   }, []);
 
   React.useEffect(() => {
@@ -253,9 +341,8 @@ function App() {
   }, [highlightCells])
 
   React.useEffect(() => {
-
     // get game info
-    let { cells, filledCells, emptyCells, complexity } = getGameInfo(cellValues);
+    let { emptyCells, complexity } = getGameInfo(cellValues);
 
     // use game info to update state
     setNumberOfEmptyCells(emptyCells);
@@ -266,12 +353,35 @@ function App() {
       setSolvedEnabled(false)
     }
 
+    if (initialEmpty !== emptyCells) {
+      setGameActive(true)
+    }
+    
+    // check if we have beat the game
+    if (gameActive && emptyCells === 0) {
+      toast.success(
+        `Congratulations! You Won!`, 
+        {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      );
+      setGamesWon(prev => prev + 1)
+      setTimeout(() => {
+        newGame()
+      }, 3000)
+      
+    }
     
   }, [cellValues])
 
-  const notify = () => {
+  const notify = (message="🦄 Wow so easy!") => {
     toast(
-      '🦄 Wow so easy!', 
+      `${message}`, 
       {
         position: 'top-right',
         autoClose: 3000,
@@ -281,6 +391,23 @@ function App() {
         draggable: true
       }
     )
+  }
+
+  const [savedGame, setSavedGame] = React.useState(null);
+
+  const saveGame = () => {
+    let savedCells = getAllCellsInfo(cellValues);
+    let cellsFormatted = getAllCellsInfoCellsAsCSV(savedCells);
+    let emptyCells = numberOfEmptyCells;
+    let difficulty = gameDifficulty;
+    let savedGame = { cells: cellsFormatted, gameId, difficulty, emptyCells, complexity }
+    setSavedGame(savedGame);
+  }
+
+  const loadGame = () => {
+    let oldCellValues = savedGame.cells;
+    setCellValues(oldCellValues)
+    resetColors();
   }
 
   return (
@@ -295,14 +422,15 @@ function App() {
           {/** TOOLS **/}
           <div className="container">
             <Tools 
-              solve={solve} 
-              solveEnabled={solveEnabled}
-              stop={stop} 
+              solve={handleSolveClicked} 
+              solveEnabled={solveEnabled} 
               newGame={newGame} 
-              deleteGame={deleteGame} 
-              hint={hint}
-              solveSingleSquare={solveSingleSquare} 
-              hintDisabled={hintDisabled}
+              startOver={startOver} 
+              markThisCell={markThisCell}
+              showAlert={showAlert}
+              saveGame={saveGame}
+              loadGame={loadGame}
+              loadEnabled={savedGame}
             />
           </div>
           {/** MAIN CONTENT **/}
@@ -328,6 +456,7 @@ function App() {
               {/** GAME INFO **/}
               <div className="column">
                 <GameInfo
+                  gameId={gameId}
                   gameDifficulty={gameDifficulty}
                   complexity={complexity}
                   numberOfEmptyCells={numberOfEmptyCells}
@@ -344,7 +473,7 @@ function App() {
 
                       <ConsoleRight
                         consoleMessage={consoleMessage}
-                        numberSolved={numberSolved}
+                        gamesWon={gamesWon}
                         showFound={handleShowFound}
                         hintsUsed={hintsUsed}
                       />

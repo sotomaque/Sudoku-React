@@ -86,7 +86,7 @@ function getKnownValues(allCells, row, column, cube) {
                     row: cell.row,
                     column: cell.column,
                     cube: cell.cube,
-                    valule: cell.value
+                    value: cell.value
                 };
 
                 knownValues.push(cell.value);
@@ -131,8 +131,8 @@ export function getGameInfo(cellValues) {
     let filledCells = 0;
     let emptyCells = 0;
     let complexity = 1;
-
     allCells.map(cell => {
+        
         if (cell.value > 0) {
             filledCells++;
         } else {
@@ -161,9 +161,19 @@ export function solveAlgo2(cellValues) {
             }
         })
     });
+
     return foundCells;
 }
 
+ /**
+   * @param {string, number, Object} - possible constraint (i.e. row, column or cube),
+   *                                 - possible value (1-9 inclusive)
+   *                                 - Object for eact cell in grid of type
+   *   {row, column, cube, value, candidates}
+   * 
+   * @return {Array} res - object has fields for NumberOfEmptyCells,
+   *                             Complexity and Complexity-log
+*/
 function checkCandidiatesDynamically(ref, refValue, allCellsWithCandidates) {
     let count = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     let storeObjArray = [];
@@ -193,5 +203,71 @@ function checkCandidiatesDynamically(ref, refValue, allCellsWithCandidates) {
         }
     });
 
-    return [...foundCellsObjArr];
+    let results = [...foundCellsObjArr];
+    return results;
+}
+
+export function validInput(cellValues, id, value) {
+    let candidates = candidateValuesById(cellValues, id);
+    if (candidates.indexOf(parseInt(value)) > -1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// called if valid input fails
+// returns id's of cells which conflict with desired input
+export function getIdsOfConflictingCells(cellValues, id, value) {
+    let row = parseInt(id[0]);
+    let column = parseInt(id[1]);
+    let cube = getCubeIndex(row, column);
+    console.log(`row: ${row}, column: ${column}, cube: ${cube}`)
+    let idsOfConflictingCells = [];
+    let allCells = getAllCellsInfo(cellValues);
+
+    let known = getKnownValues(allCells, row, column, cube);
+    let knownValuesObj = known.knownValuesObj;
+
+    knownValuesObj.map( cell => {
+        if (cell.value === parseInt(value)) {
+            let conflictingRowNumber = cell.row;
+            let conflictingColumnNumber = cell.column;
+            let id = `${conflictingRowNumber}${conflictingColumnNumber}`;
+            idsOfConflictingCells.push(id);
+        }
+    });
+    
+    return idsOfConflictingCells;
+}
+
+
+// for all the empty cells in our grid
+// return an object -> { row, column, cube, value, candidatesArray }
+export function solveAlgo3(cellValues) {
+    let gameInfo = getGameInfo(cellValues);
+    let allCellsWithCandidates = gameInfo.cells;
+    let foundCells = [];
+
+    allCellsWithCandidates.map(cell => {
+        if (cell.candidates !== undefined && cell.candidates.length > 0) {
+            foundCells.push(cell);
+        }
+    });
+
+    return foundCells;
+}
+
+export function getAllCellsInfoCellsAsCSV(cellValues) {
+    let arrayOfStrings = []
+
+    cellValues.map(cell => {
+        if (cell.value === 0) {
+            arrayOfStrings.push('')
+        } else {
+            arrayOfStrings.push(cell.value.toString())
+        }
+    })
+
+    return arrayOfStrings
 }

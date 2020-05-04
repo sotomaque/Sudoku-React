@@ -9,6 +9,7 @@
     "bulma": "^0.8.0",
     "lodash": "^4.17.15",
     "react": "^16.13.0",
+    "react-confirm-alert": "^2.6.1",
     "react-dom": "^16.13.0",
     "react-scripts": "3.4.0",
     "react-toastify": "^5.5.0",

@@ -1,6 +1,6 @@
 import React from "react";
 
-const ConsoleRight = ({ consoleMessage, numberSolved, showFound, hintsUsed }) => {
+const ConsoleRight = ({ consoleMessage, gamesWon, showFound, hintsUsed }) => {
   return (
     <div>
       <br />
@@ -22,10 +22,10 @@ const ConsoleRight = ({ consoleMessage, numberSolved, showFound, hintsUsed }) =>
 
       <article className="message is-warning">
         <div className="message-header">
-          <p>Number Solved</p>
+          <p>Games Won:</p>
         </div>
 
-        <div className="message-body">{numberSolved}</div>
+        <div className="message-body">{gamesWon}</div>
       </article>
 
       <article className="message is-warning">
