@@ -9,8 +9,6 @@ const GameInfo = ({ gameId, gameDifficulty, complexity, numberOfEmptyCells, comp
     <>
         <br />
         <article className="panel is-white">
-
-
           <p className="panel-heading" style={{ display: 'flex', justifyContent: 'center'}}>Game Info</p>
           <p className="panel-subheading" style={{ display: 'flex', justifyContent: 'center'}}>Game ID: {gameId}</p>
           <br />
@@ -39,8 +37,6 @@ const GameInfo = ({ gameId, gameDifficulty, complexity, numberOfEmptyCells, comp
             complexityLog : {complexityLog}
           </a>
         </article>
-        <br />
-        <br />
         <br />
     </>
   );

@@ -20,6 +20,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Settings from "./Components/Settings";
 
+import Confetti from 'react-confetti'
+
 function App() {
 
   // tools state
@@ -48,6 +50,10 @@ function App() {
   // console right state
   const [consoleMessage, setConsoleMessage] = React.useState('First Message');
   const [gamesWon, setGamesWon] = React.useState(0)
+  const [markThisCellEnabled, setMarkThisCellEnabled] = React.useState(false);
+  const [showConfetti, setShowConfetti] = React.useState(false);
+
+  const [piecesAdded, setPiecesAdded] = React.useState([]);
   
   // tool props
   const handleSolveClicked = () => {
@@ -61,7 +67,7 @@ function App() {
       let row = cell.row;
       let column = cell.column;
       let id = `${row}${column}`;
-      notify(`changing id: ${id} to have value: ${candidates} using algo 1`);
+      notify(`${candidates} is the only number that can go into (row: ${row}, column: ${column})`);
       setHintsUsed(prev => prev + 1);
       blinkCells([id], "coral");
       changeCellValueById(id, candidates);
@@ -79,7 +85,8 @@ function App() {
         let row = detail.row;
         let column = detail.column;
         let id = `${row}${column}`;
-        notify(`changing id: ${id} to have value: ${value} using algo 2 bc of: ${constrainedBy}`);
+        notify(`although [${candidates.toString()}] can go into (row: ${row}, column: ${column}),
+                ${value} can only go in one place in this ${constrainedBy}`);
         setHintsUsed(prev => prev + 1);
         blinkCells([id], "coral");
         changeCellValueById(id, value);
@@ -121,6 +128,8 @@ function App() {
     resetColors();
     // save game so we can start over
     saveVirginGame(gameObj);
+    // reset hints used
+    setHintsUsed(0);
   };
   const resetColors = () => {
     const colors = new Array(81).fill('bg-white');
@@ -134,8 +143,8 @@ function App() {
     newArr.pop();
     // use it to update our cell values state
     setCellValues(newArr);
-    
     resetColors();
+    setStartOverEnabled(false);
   };
   const saveVirginGame = (gameObj) => {
     console.log('virgin game: ', gameObj.id);
@@ -163,7 +172,11 @@ function App() {
     if ((value > 0 && value < 10) || (value === "")){
       // check if user input is valid entry for that position
       if (validInput(cellValues, id, value)) {
+        if (!startOverEnabled) {
+          setStartOverEnabled(true)
+        }
         changeCellValueById(id, value);
+        setPiecesAdded(prev => [...prev, value]);
       } 
       // if not highlight the cells it conflicts with
       else {
@@ -217,6 +230,10 @@ function App() {
 
     setIdSelected(id);
 
+    if (id) {
+      setMarkThisCellEnabled(true);
+    } 
+
     // color selected cell blue, constraining cells coral
     if (highlightCells) {
       colorConnectedCells(id, "coral");
@@ -269,7 +286,7 @@ function App() {
     }
     let candidates = candidateValuesById(cellValues, id);
     console.log('candidates: ', candidates)
-    setPossibleValue(candidates[Math.floor(Math.random() * candidates.length)])
+    setPossibleValue(candidates)
   }
   const markThisCell = () => {
     if (idSelected !== null) {
@@ -282,10 +299,9 @@ function App() {
       } else {
         colorCells[index] = "bg-white";
       }
-      
       setCellBackgroundColors(colorCells);
     } else {
-      console.log('id selected is null')
+      console.log('id selected is null');
     }
   }
   const showAlert = () => {
@@ -341,12 +357,14 @@ function App() {
 
   // console right props
   const handleShowFound = () => {
-    console.log("handleShowFound");
+    let piecesFound = `${piecesAdded}`
+    setConsoleMessage(piecesFound)
   }
   const sendConsole = () => {
     console.log("sendConsole")
   }
   
+  const [startOverEnabled, setStartOverEnabled] = React.useState(false)
 
   React.useEffect(() => {
     // load random game
@@ -391,6 +409,10 @@ function App() {
           draggable: true
         }
       );
+      setShowConfetti(true);
+      setTimeout(() => {
+        setShowConfetti(false)
+      }, 5000)
       setGamesWon(prev => prev + 1)
       setTimeout(() => {
         newGame()
@@ -400,8 +422,7 @@ function App() {
     
   }, [cellValues])
 
-  React.useEffect(() => {
-    
+  React.useEffect(() => { 
     // check if we lost
     let haveWeLost = isGameOver(cellValues);
 
@@ -439,10 +460,20 @@ function App() {
     )
   }
 
+  const [showCandidates, setShowCandidates] = React.useState(false);
+
+  const handleShowCandidatesClicked = () => {
+    setShowCandidates(prev => !prev);
+  }
+
   return (
     <>
       {/** POPUP COMPONENT **/}
       <ToastContainer />
+      {
+        showConfetti &&
+        <Confetti />
+      }
       {/** END OF POPUP COMPONENT **/}
       <section className="hero is-fullheight">
         <div className="container is-fluid">
@@ -455,11 +486,14 @@ function App() {
               solveEnabled={solveEnabled} 
               newGame={newGame} 
               startOver={startOver} 
+              startOverEnabled={startOverEnabled}
               markThisCell={markThisCell}
+              markThisCellEnabled={markThisCellEnabled}
               showAlert={showAlert}
               saveGame={saveGame}
               loadGame={loadGame}
               loadEnabled={savedGame}
+              showCandidates={handleShowCandidatesClicked}
             />
           </div>
           {/** MAIN CONTENT **/}
@@ -491,6 +525,15 @@ function App() {
                   numberOfEmptyCells={numberOfEmptyCells}
                   complexityLog={complexityLog}
                 />
+
+                <article className="message is-warning">
+                  <div className="message-header">
+                    <p>Notes</p>
+                  </div>
+
+                  <div className="message-body">notes</div>
+                </article>
+
               </div>
               {/** END OF GAME INFO **/}
 
@@ -505,6 +548,8 @@ function App() {
                         gamesWon={gamesWon}
                         showFound={handleShowFound}
                         hintsUsed={hintsUsed}
+                        showCandidates={showCandidates}
+                        candidates={possibleValue}
                       />
 
                     </div>

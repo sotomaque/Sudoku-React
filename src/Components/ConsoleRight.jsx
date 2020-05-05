@@ -1,25 +1,12 @@
 import React from "react";
 
-const ConsoleRight = ({ consoleMessage, gamesWon, showFound, hintsUsed }) => {
+const ConsoleRight = ({ gamesWon, hintsUsed, showCandidates, candidates }) => {
+
+
+
   return (
-    <div>
+    <>
       <br />
-      <article className="message is-warning">
-        <div className="message-header">
-          <p>Analysis</p>
-        </div>
-
-        <div className="message-body">{consoleMessage}</div>
-
-        <div className="message-body">
-          <a href="#" className="button is-small is-link" onClick={showFound}>
-            Show What You Have Found{" "}
-          </a>
-        </div>
-      </article>
-
-      <br />
-
       <article className="message is-warning">
         <div className="message-header">
           <p>Games Won:</p>
@@ -35,7 +22,18 @@ const ConsoleRight = ({ consoleMessage, gamesWon, showFound, hintsUsed }) => {
 
         <div className="message-body">{hintsUsed}</div>
       </article>
-    </div>
+
+      {
+        showCandidates && (
+          <article className="message is-warning">
+            <div className="message-header">
+              <p>Possible Values</p>
+            </div>
+            <div className="message-body">{candidates.toString()}</div>
+          </article>
+        )
+      }
+    </>
   );
 };
 
