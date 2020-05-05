@@ -38,7 +38,6 @@ function App() {
   const [gameDifficulty, setGameDifficulty] = React.useState('easy');
   const [gameId, setGameId] = React.useState(0);
   const [complexity, setComplexity] = React.useState(null);
-  const [complexityLog, setComplexityLog] = React.useState(null);
   const [numberOfEmptyCells, setNumberOfEmptyCells] = React.useState();
   const [gameActive, setGameActive] = React.useState(false);
   const [idSelected, setIdSelected] = React.useState(null);
@@ -130,6 +129,8 @@ function App() {
     saveVirginGame(gameObj);
     // reset hints used
     setHintsUsed(0);
+    // reset possibleValues
+    setPossibleValue('')
   };
   const resetColors = () => {
     const colors = new Array(81).fill('bg-white');
@@ -438,7 +439,10 @@ function App() {
           draggable: true
         }
       );
-      setGamesWon(prev => prev + 1)
+      setShowConfetti(true);
+      setTimeout(() => {
+        setShowConfetti(false)
+      }, 5000)
       setTimeout(() => {
         newGame()
       }, 3000)
@@ -493,7 +497,8 @@ function App() {
               saveGame={saveGame}
               loadGame={loadGame}
               loadEnabled={savedGame}
-              showCandidates={handleShowCandidatesClicked}
+              handleShowCandidatesClicked={handleShowCandidatesClicked}
+              showCandidates={showCandidates}
             />
           </div>
           {/** MAIN CONTENT **/}
@@ -523,16 +528,7 @@ function App() {
                   gameDifficulty={gameDifficulty}
                   complexity={complexity}
                   numberOfEmptyCells={numberOfEmptyCells}
-                  complexityLog={complexityLog}
                 />
-
-                <article className="message is-warning">
-                  <div className="message-header">
-                    <p>Notes</p>
-                  </div>
-
-                  <div className="message-body">notes</div>
-                </article>
 
               </div>
               {/** END OF GAME INFO **/}

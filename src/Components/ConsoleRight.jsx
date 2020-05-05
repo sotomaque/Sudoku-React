@@ -9,7 +9,7 @@ const ConsoleRight = ({ gamesWon, hintsUsed, showCandidates, candidates }) => {
       <br />
       <article className="message is-warning">
         <div className="message-header">
-          <p>Games Won:</p>
+          <p>Games Won</p>
         </div>
 
         <div className="message-body">{gamesWon}</div>

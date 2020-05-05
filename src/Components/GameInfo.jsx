@@ -1,6 +1,6 @@
 import React from "react";
 
-const GameInfo = ({ gameId, gameDifficulty, complexity, numberOfEmptyCells, complexityLog }) => {
+const GameInfo = ({ gameId, gameDifficulty, complexity, numberOfEmptyCells }) => {
   const cName = (gameDifficulty === "hard") ? "danger"
       : (gameDifficulty === "easy") ? "success"
         : "warning";
@@ -18,24 +18,18 @@ const GameInfo = ({ gameId, gameDifficulty, complexity, numberOfEmptyCells, comp
             </button>
           </div>
 
-          <a className="panel-block">
+          <div className="panel-block">
             <span className="panel-icon">
               <i className="fas fa-book" aria-hidden="true"></i>
             </span>
             Empty Cells : {numberOfEmptyCells}
-          </a>
-          <a className="panel-block">
+          </div>
+          <div className="panel-block">
             <span className="panel-icon">
               <i className="fas fa-book" aria-hidden="true"></i>
             </span>
             Complexity : {complexity}
-          </a>
-          <a className="panel-block">
-            <span className="panel-icon">
-              <i className="fas fa-book" aria-hidden="true"></i>
-            </span>
-            complexityLog : {complexityLog}
-          </a>
+          </div>
         </article>
         <br />
     </>
