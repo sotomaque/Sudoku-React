@@ -12,9 +12,9 @@ import Board from './Components/Board';
 import GameInfo from "./Components/GameInfo";
 import ConsoleRight from './Components/ConsoleRight';
 
-import { getFirstValue, loadGameByDifficulty } from './Controls/NewGame';
+import { getFirstValue, loadGameByDifficulty, getGameById } from './Controls/NewGame';
 import { convertIdToIndex, getCubeIndex, getAllCellsInfo, candidateValuesById, getGameInfo, getAllCellsInfoCellsAsCSV,
-   solveAlgo1, solveAlgo2, solveAlgo3, validInput, getIdsOfConflictingCells } from './Controls/NewEngine';
+   solveAlgo1, solveAlgo2, solveAlgo3, validInput, getIdsOfConflictingCells, isGameOver } from './Controls/NewEngine';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -39,8 +39,11 @@ function App() {
   const [complexityLog, setComplexityLog] = React.useState(null);
   const [numberOfEmptyCells, setNumberOfEmptyCells] = React.useState();
   const [gameActive, setGameActive] = React.useState(false);
-
+  const [idSelected, setIdSelected] = React.useState(null);
   const [possibleValue, setPossibleValue] = React.useState('');
+  const [savedGame, setSavedGame] = React.useState(null);
+  const [virginGameId, setVirginGameId] = React.useState(null);
+  const [initialEmpty, setInitialEmpty] = React.useState();
 
   // console right state
   const [consoleMessage, setConsoleMessage] = React.useState('First Message');
@@ -113,17 +116,43 @@ function App() {
     let newArr = gameObj.str.split(';');
     newArr.pop();
     // use it to update our cell values state
-    console.log('passing into cell values: ', newArr)
     setCellValues(newArr);
     // reset colors
     resetColors();
+    // save game so we can start over
+    saveVirginGame(gameObj);
   };
   const resetColors = () => {
     const colors = new Array(81).fill('bg-white');
     setCellBackgroundColors(colors);
-  }
+  };
   const startOver = () => {
-    console.log("deleteGame")
+    let virginGame = getGameById(virginGameId);
+
+    // cast into array
+    let newArr = virginGame[0].str.split(';');
+    newArr.pop();
+    // use it to update our cell values state
+    setCellValues(newArr);
+    
+    resetColors();
+  };
+  const saveVirginGame = (gameObj) => {
+    console.log('virgin game: ', gameObj.id);
+    setVirginGameId(gameObj.id);
+  };
+  const saveGame = () => {
+    let savedCells = getAllCellsInfo(cellValues);
+    let cellsFormatted = getAllCellsInfoCellsAsCSV(savedCells);
+    let emptyCells = numberOfEmptyCells;
+    let difficulty = gameDifficulty;
+    let savedGame = { cells: cellsFormatted, gameId, difficulty, emptyCells, complexity }
+    setSavedGame(savedGame);
+  };
+  const loadGame = () => {
+    let oldCellValues = savedGame.cells;
+    setCellValues(oldCellValues)
+    resetColors();
   };
 
   // board props
@@ -242,13 +271,6 @@ function App() {
     console.log('candidates: ', candidates)
     setPossibleValue(candidates[Math.floor(Math.random() * candidates.length)])
   }
-  const colorCellById = (id, color) => {
-    let colorCells = [...cellBackgroundColors];
-    let index = convertIdToIndex(id);
-    colorCells[index] = "bg-" + color;
-    setCellBackgroundColors(colorCells);
-  }
-  const [idSelected, setIdSelected] = React.useState(null);
   const markThisCell = () => {
     if (idSelected !== null) {
       // change color of that cell
@@ -304,7 +326,6 @@ function App() {
     });
   }
   const getGameByDifficulty = (difficulty) => {
-    console.log('getting a ', difficulty, ' game')
     // get valid starting game matrix from Controls
     let gameObj = loadGameByDifficulty(difficulty);
     setGameDifficulty(gameObj.difficulty);
@@ -325,7 +346,7 @@ function App() {
   const sendConsole = () => {
     console.log("sendConsole")
   }
-  const [initialEmpty, setInitialEmpty] = React.useState();
+  
 
   React.useEffect(() => {
     // load random game
@@ -379,6 +400,31 @@ function App() {
     
   }, [cellValues])
 
+  React.useEffect(() => {
+    
+    // check if we lost
+    let haveWeLost = isGameOver(cellValues);
+
+    if (haveWeLost) {
+      toast.error(
+        `HAHA! You Lost!`, 
+        {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      );
+      setGamesWon(prev => prev + 1)
+      setTimeout(() => {
+        newGame()
+      }, 3000)
+    }
+      
+  }, [cellValues])
+
   const notify = (message="🦄 Wow so easy!") => {
     toast(
       `${message}`, 
@@ -391,23 +437,6 @@ function App() {
         draggable: true
       }
     )
-  }
-
-  const [savedGame, setSavedGame] = React.useState(null);
-
-  const saveGame = () => {
-    let savedCells = getAllCellsInfo(cellValues);
-    let cellsFormatted = getAllCellsInfoCellsAsCSV(savedCells);
-    let emptyCells = numberOfEmptyCells;
-    let difficulty = gameDifficulty;
-    let savedGame = { cells: cellsFormatted, gameId, difficulty, emptyCells, complexity }
-    setSavedGame(savedGame);
-  }
-
-  const loadGame = () => {
-    let oldCellValues = savedGame.cells;
-    setCellValues(oldCellValues)
-    resetColors();
   }
 
   return (

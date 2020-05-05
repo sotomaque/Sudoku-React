@@ -271,3 +271,19 @@ export function getAllCellsInfoCellsAsCSV(cellValues) {
 
     return arrayOfStrings
 }
+
+export function isGameOver(cellValues) {
+    let gameInfo = getGameInfo(cellValues);
+    let allCellsWithCandidates = gameInfo.cells;
+    let gameOver = false;
+    allCellsWithCandidates.map(cell => {
+        if (cell.value === 0) {
+            let candidates = cell.candidates;
+            
+            if (candidates.length === 0 || candidates === []) {
+                gameOver = true;
+            }
+        }
+    });
+    return gameOver;
+}

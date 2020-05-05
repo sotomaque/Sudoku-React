@@ -7,7 +7,7 @@ const Tools = ({ solve, solveEnabled, newGame, loadGame, loadEnabled,
       <div className="buttons">
         <button className="button is-link" onClick={solve} disabled={!solveEnabled}> Hint </button>
         <button className="button is-success" onClick={newGame}> New Game </button>
-        <button className="button is-warning" onClick={startOver}> Start Over </button>
+        <button className="button is-danger" onClick={startOver}> Start Over </button>
         <button className="button is-primary" onClick={markThisCell}> Mark This Celll </button>
         <button className="button is-info" onClick={showAlert}> Select Difficulty </button>
         <button className="button is-success" onClick={saveGame}> Save Game </button>
