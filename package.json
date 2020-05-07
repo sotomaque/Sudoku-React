@@ -4,21 +4,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
     "bulma": "^0.8.0",
     "lodash": "^4.17.15",
     "react": "^16.13.0",
     "react-confetti": "^5.0.1",
     "react-confirm-alert": "^2.6.1",
     "react-dom": "^16.13.0",
-    "react-scripts": "3.4.0",
+    "react-scripts": "3.4.1",
     "react-toastify": "^5.5.0",
     "underscore": "^1.10.2"
   },
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "start": "react-scripts start",
@@ -42,9 +38,9 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^2.2.0"
-  },
-  "resolutions": {
-    "@babel/preset-env": "^7.8.7"
+    "gh-pages": "^2.2.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2"
   }
 }
