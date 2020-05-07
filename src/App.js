@@ -89,29 +89,8 @@ function App() {
         setHintsUsed(prev => prev + 1);
         blinkCells([id], "coral");
         changeCellValueById(id, value);
-      } else {
-        console.log('feeling lucky')
-        feelingLucky();
-      }
-
+      } 
     }
-  }
-  const feelingLucky = () => {
-    let try1 = solveAlgo3(cellValues);
-    
-    if (try1===null) {
-      console.log('try 1 is empty, failed');
-    } else {
-      console.log('try1: ', try1);
-
-      if (tryNow(try1) === false) {
-        console.log('try now is false, must go back')
-      }
-    } 
-  }
-  const tryNow = (try1) => {
-    let handed = _.sample(try1);
-    console.log('handed: ', handed)
   }
   const newGame = () => {
     // get valid starting game matrix from Controls
@@ -148,7 +127,6 @@ function App() {
     setStartOverEnabled(false);
   };
   const saveVirginGame = (gameObj) => {
-    console.log('virgin game: ', gameObj.id);
     setVirginGameId(gameObj.id);
   };
   const saveGame = () => {
@@ -281,12 +259,9 @@ function App() {
   const showCellInfo = (id, value) => {
     // if selected cell is filled
     if (parseInt(value) > 0) {
-      // set message to display on ConsoleRight
-      sendConsole(`This one is filled: (Row, Column): (${id[0]}, ${id[1]}))`);
       return;
     }
     let candidates = candidateValuesById(cellValues, id);
-    console.log('candidates: ', candidates)
     setPossibleValue(candidates)
   }
   const markThisCell = () => {
@@ -360,9 +335,6 @@ function App() {
   const handleShowFound = () => {
     let piecesFound = `${piecesAdded}`
     setConsoleMessage(piecesFound)
-  }
-  const sendConsole = () => {
-    console.log("sendConsole")
   }
   
   const [startOverEnabled, setStartOverEnabled] = React.useState(false)
