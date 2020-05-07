@@ -222,7 +222,6 @@ export function getIdsOfConflictingCells(cellValues, id, value) {
     let row = parseInt(id[0]);
     let column = parseInt(id[1]);
     let cube = getCubeIndex(row, column);
-    console.log(`row: ${row}, column: ${column}, cube: ${cube}`)
     let idsOfConflictingCells = [];
     let allCells = getAllCellsInfo(cellValues);
 

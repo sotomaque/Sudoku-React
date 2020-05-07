@@ -142,7 +142,6 @@ export function loadGameByDifficulty(desiredDifficulty) {
     hard.push(game10);
     hard.push(game11);
 
-
     switch(desiredDifficulty) {
         case 'easy':
             return _.sample(easy);
